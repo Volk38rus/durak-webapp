@@ -3,14 +3,34 @@ function getGameIdFromUrl() {
     return params.get("game_id") || "UNKNOWN";
 }
 
-function sendCard(card) {
-    const gameId = getGameIdFromUrl();
-    const data = {
-        action: "move",
-        card: card,
-        game_id: gameId
-    };
-    Telegram.WebApp.sendData(JSON.stringify(data));
+function getPlayerId() {
+    return Telegram.WebApp.initDataUnsafe.user?.id?.toString() || "0";
+}
+
+async function sendMove(card) {
+    const game_id = getGameIdFromUrl();
+    const player_id = getPlayerId();
+
+    await fetch("http://localhost:8000/api/move", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ game_id, player_id, card })
+    });
+
+    await updateGameState();
+}
+
+async function updateGameState() {
+    const game_id = getGameIdFromUrl();
+    const player_id = getPlayerId();
+
+    const response = await fetch(`http://localhost:8000/api/game-state?game_id=${game_id}&player_id=${player_id}`);
+    const state = await response.json();
+
+    if (state.last_move && state.last_move.player !== player_id) {
+        document.getElementById("enemyMove").innerText =
+            "Соперник сходил: " + state.last_move.card;
+    }
 }
 
 function generateCards() {
@@ -26,8 +46,10 @@ function generateCards() {
 
 window.onload = function () {
     Telegram.WebApp.ready();
-    const gameId = getGameIdFromUrl();
-    document.getElementById("status").innerText = "Вы подключены к игре № " + gameId;
+
+    const game_id = getGameIdFromUrl();
+    document.getElementById("status").innerText =
+        "Вы подключены к игре № " + game_id;
 
     const cards = generateCards();
     const container = document.getElementById("cardContainer");
@@ -35,7 +57,9 @@ window.onload = function () {
         const div = document.createElement("div");
         div.className = "card";
         div.innerText = card;
-        div.onclick = () => sendCard(card);
+        div.onclick = () => sendMove(card);
         container.appendChild(div);
     });
+
+    updateGameState();
 };
