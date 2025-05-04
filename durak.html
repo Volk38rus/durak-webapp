@@ -14,16 +14,27 @@
             text-align: center;
             padding: 20px;
         }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            margin-top: 30px;
+        .cards {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        .card {
+            font-size: 24px;
+            padding: 15px 20px;
+            margin: 10px;
+            background: #fff;
+            color: #000;
+            border-radius: 8px;
+            cursor: pointer;
+            user-select: none;
         }
     </style>
 </head>
 <body>
     <h1>Добро пожаловать в игру!</h1>
     <p id="status">Загрузка...</p>
-    <button onclick="sendMove()">Сделать ход</button>
+    <div class="cards" id="cardContainer"></div>
 </body>
 </html>
